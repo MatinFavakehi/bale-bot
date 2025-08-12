@@ -1,0 +1,15 @@
+aiohttp==3.9.1
+aiosignal==1.4.0
+async-timeout==4.0.3
+asyncio==3.4.3
+attrs==25.3.0
+frozenlist==1.7.0
+idna==3.10
+multidict==6.6.4
+propcache==0.3.2
+python-bale-bot==2.5.0
+python-dotenv==1.1.1
+typing_extensions==4.14.1
+yarl==1.20.1
+fastapi
+uvicorn[standard]
