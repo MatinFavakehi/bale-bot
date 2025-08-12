@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv
 from bale import Bot, Message
-from fastapi import FastAPI
-import asyncio
+from flask import Flask, jsonify
+import threading
 
 load_dotenv()
 TOKEN = os.getenv("BALE_TOKEN")
@@ -10,11 +10,10 @@ if not TOKEN:
     raise RuntimeError("متغیر محیطی BALE_TOKEN پیدا نشد")
 
 bot = Bot(token=TOKEN)
-app = FastAPI()
+app = Flask(__name__)
 
 user_data = {}
 
-# مراحل گفتگو
 (
     GET_PARTICIPATION,
     GET_CAR_PRICE,
@@ -23,8 +22,10 @@ user_data = {}
     END
 ) = range(5)
 
+
 def format_number(number):
     return "{:,}".format(int(number))
+
 
 def convert_to_million_billion(number):
     number = float(number)
@@ -35,13 +36,11 @@ def convert_to_million_billion(number):
     else:
         return f"{number:.0f}"
 
-@app.get("/")
-async def root():
-    return {"message": "ربات بله فعال است"}
 
 @bot.event
 async def on_ready():
     print(f"{bot.user} is ready!")
+
 
 @bot.event
 async def on_message(message: Message):
@@ -79,7 +78,7 @@ async def on_message(message: Message):
                 readable_num = convert_to_million_billion(car_price)
                 await message.reply(
                     f"مبلغ واردشده: {formatted_num} تومان\n"
-                    f"({readable_num} تومان)\n\n"
+                    f"({readable_num} تومان\n\n"
                     "میزان *سود کل* را به تومان وارد کنید:"
                 )
                 user_data[chat_id].update({
@@ -134,11 +133,18 @@ async def on_message(message: Message):
     else:
         await message.reply("برای شروع، /start را ارسال کنید.")
 
-async def start_bot():
-    await bot.start()
+
+@app.route("/")
+def home():
+    return jsonify({"message": "ربات بله فعال است"})
+
+
+def run_bot():
+    bot.run()
+
 
 if __name__ == "__main__":
-    import uvicorn
-    loop = asyncio.get_event_loop()
-    loop.create_task(start_bot())
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+    # اجرای بات در یک رشته جدا
+    threading.Thread(target=run_bot).start()
+    # اجرای وب‌سرور
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
